@@ -12,6 +12,8 @@ struct Cell
 	int j;
 };
 
+extern int steps;
+
 bool setCheckFilled(Sudoku& sudoku);
 bool solve1(Sudoku& sudoku);
 bool solve2(Sudoku& sudoku);

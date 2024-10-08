@@ -166,25 +166,71 @@ bool solve1(Sudoku& sudoku)
 }
 
 // SOLVE 2 ------------------------------------------------------------------------------------------------------------------------------
-
+vector<vector<int>> cellOptions(9, vector<int>(9, 0)); // store the number of possible values of each cell
+vector<vector<vector<bool>>> cellPossibleValues(9, vector<vector<bool>>(9, vector<bool>(10, false)));
 int countPossibleValues(const Sudoku& sudoku, int i, int j)
 {
     int cnt = 0;
     for (int number = 1; number <= 9; number++)
     {
         if (sudoku.checkRow[i][number] == false && sudoku.checkCol[j][number] == false && sudoku.checkBlock[BlockID(i, j)][number] == false)
+        {
+            cellPossibleValues[i][j][number] = true;
             cnt++;
+        }
     }
     return cnt;
 }
 
-bool comparator2(const Cell& a, const Cell& b)
+void updateCellsPossibleValue(Sudoku& sudoku, int i, int j, int cellValue, int amount)
 {
-    return a.possible < b.possible;
+    bool valueisUsed;
+    if (amount == -1) valueisUsed = true;
+    else valueisUsed = false;
+
+    int blockI[] = { 0, 0, 0, 3, 3, 3, 6, 6, 6 };
+    int blockJ[] = { 0, 3, 6, 0, 3, 6, 0, 3, 6 };
+    int blockID = BlockID(i, j);
+    int startI = blockI[blockID], startJ = blockJ[blockID];
+    for (int di = startI; di <= startI + 2; di++)
+    {
+        for (int dj = startJ; dj <= startJ + 2; dj++)
+        {
+            if (cellPossibleValues[di][dj][cellValue] == valueisUsed)
+            {
+                cellPossibleValues[di][dj][cellValue] = !valueisUsed;
+                cellOptions[di][dj] += amount;
+            }
+        }
+    }
+    for (int k = 0; k < 9; k++)
+    {
+        if (k < startJ || k > startJ + 2)
+        {
+            if (cellPossibleValues[i][k][cellValue] == valueisUsed)
+            {
+                cellPossibleValues[i][k][cellValue] = !valueisUsed;
+                cellOptions[i][k] += amount;
+            }
+        }
+            
+        if (k < startI || k > startI + 2)
+        {
+            if (cellPossibleValues[k][j][cellValue] == valueisUsed)
+            {
+                cellPossibleValues[k][j][cellValue] = !valueisUsed;
+                cellOptions[k][j] += amount;
+            }
+        }
+    }
 }
 
-int steps = 0;
-void backtrack2(Sudoku& sudoku, int index, const vector<Cell>& cellCollection, bool& isFinished)
+bool comparator2(const Cell& a, const Cell& b)
+{
+    return cellOptions[a.i][a.j] < cellOptions[b.i][b.j];
+}
+
+void backtrack2(Sudoku& sudoku, int index, vector<Cell>& cellCollection, bool& isFinished)
 {
     if (sudoku.countFilled == 81)
     {
@@ -198,21 +244,32 @@ void backtrack2(Sudoku& sudoku, int index, const vector<Cell>& cellCollection, b
     int j = cellCollection[index].j;
     cout << "Fill (x,y): (" << i << "," << j << ")" << endl << endl;
     printMatrix(sudoku);
+
+    for (int k = index; k < min(index + 10, cellCollection.size()); k++)
+    {
+        cout << cellCollection[k].i << " " << cellCollection[k].j << " : " << cellOptions[cellCollection[k].i][cellCollection[k].j] << endl;
+    }
+    int cellsLeft = max(0, cellCollection.size() - 1 - index - 10);
+    if (cellsLeft > 0) cout << cellsLeft << " more..." << endl;
+
     cout << endl;
     for (int number = 1; number <= 9; number++)
     {
-        if (sudoku.checkRow[i][number] == false && sudoku.checkCol[j][number] == false && sudoku.checkBlock[BlockID(i, j)][number] == false)
+        if (cellPossibleValues[i][j][number] == true)
         {
             sudoku.Matrix[i][j] = number;
             sudoku.checkRow[i][number] = true;
             sudoku.checkCol[j][number] = true;
             sudoku.checkBlock[BlockID(i, j)][number] = true;
             sudoku.countFilled++;
+            updateCellsPossibleValue(sudoku, i, j, number, -1);
 
+            sort(cellCollection.begin() + index + 1, cellCollection.end(), comparator2);
             backtrack2(sudoku, index + 1, cellCollection, isFinished);
 
             if (isFinished) return;
 
+            updateCellsPossibleValue(sudoku, i, j, number, 1);
             sudoku.Matrix[i][j] = -1;
             sudoku.checkRow[i][number] = false;
             sudoku.checkCol[j][number] = false;
@@ -234,14 +291,15 @@ bool solve2(Sudoku& sudoku)
             Cell curCell;
             curCell.i = i;
             curCell.j = j;
-            curCell.possible = countPossibleValues(sudoku, i, j);
+            //curCell.possible = countPossibleValues(sudoku, i, j);
+            cellOptions[i][j] = countPossibleValues(sudoku, i, j);
             cellCollection.push_back(curCell);
         }
     }
     sort(cellCollection.begin(), cellCollection.end(), comparator2);
     /*for (Cell& c : cellCollection)
     {
-        cout << c.i << " " << c.j << " : " << c.possible << endl;
+        cout << c.i << " " << c.j << " : " << cellOptions[c.i][c.j] << endl;
     }
     system("pause");*/
     bool isFinished = false;

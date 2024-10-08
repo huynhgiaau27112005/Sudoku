@@ -5,17 +5,21 @@
 
 using namespace std;
 
+int steps = 0;
+
 int main()
 {
 	hideCursor();
-	Sudoku sudoku = readFile("input2.csv");
+	Sudoku sudoku = readFile("input3 - Copy.csv");
 	printMatrix(sudoku);
 	cout << endl << "Filled Cells: " << sudoku.countFilled << endl << endl;
 	system("pause");
 	bool isSolved = solve2(sudoku);
 	if (isSolved == true)
 	{
-		cout << "Solved!" << endl;
+		system("cls");
+		cout << "------------------------------------------------------------------------------------\n";
+		cout << "Solved in " << steps << " steps!" << endl << endl;
 		printMatrix(sudoku);
 	}
 	else cout << "Can not be solved." << endl;
