@@ -1,8 +1,8 @@
 #include <iostream>
-#include <windows.h>
 #include <algorithm>
 #include "algo.h"
 #include "fileworks.h"
+#include "sudoku.h"
 
 using namespace std;
 
@@ -213,7 +213,7 @@ void updateCellsPossibleValue(Sudoku& sudoku, int i, int j, int cellValue, int a
                 cellOptions[i][k] += amount;
             }
         }
-            
+
         if (k < startI || k > startI + 2)
         {
             if (cellPossibleValues[k][j][cellValue] == valueisUsed)
@@ -237,11 +237,14 @@ void backtrack2(Sudoku& sudoku, int index, vector<Cell>& cellCollection, bool& i
         isFinished = true;
         return;
     }
-    system("cls");
-    cout << "------------------------------------------------------------------------------------\n";
-    cout << "STEP: " << ++steps << endl;
+
     int i = cellCollection[index].i;
     int j = cellCollection[index].j;
+
+    ++steps;
+    /*system("cls");
+    cout << "------------------------------------------------------------------------------------\n";
+    cout << "STEP: " << ++steps << endl;
     cout << "Fill (x,y): (" << i << "," << j << ")" << endl << endl;
     printMatrix(sudoku);
 
@@ -252,7 +255,7 @@ void backtrack2(Sudoku& sudoku, int index, vector<Cell>& cellCollection, bool& i
     int cellsLeft = max(0, cellCollection.size() - 1 - index - 10);
     if (cellsLeft > 0) cout << cellsLeft << " more..." << endl;
 
-    cout << endl;
+    cout << endl;*/
     for (int number = 1; number <= 9; number++)
     {
         if (cellPossibleValues[i][j][number] == true)
