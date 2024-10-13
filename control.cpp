@@ -102,7 +102,6 @@ void setupVariables()
 			curRec.height = cellHeight;
 			curRec.x = curX;
 			curRec.y = curY;
-			cout << curRec.x << " " << curRec.y << endl;
 			cellRectangle[y][x] = curRec;
 		}
 	}
@@ -164,6 +163,49 @@ void displayMatrix()
 	}
 }
 
+void inputOrMoveCellFromKeyBoard(Cell& cell)
+{
+	char key = GetCharPressed();
+	//if (key != NULL) cout << (int)key << endl;
+
+	if (key >= '1' && key <= '9')
+	{
+		addNumberToMatrix(sudoku, cell.i, cell.j, key - '0', true);
+	}
+	else if (IsKeyPressed(KEY_UP))
+	{
+		if (cell.i == 0)
+		{
+			cell.i = 8;
+		}
+		else cell.i--;
+	}
+	else if (IsKeyPressed(KEY_DOWN))
+	{
+		if (cell.i == 8)
+		{
+			cell.i = 0;
+		}
+		else cell.i++;
+	}
+	else if (IsKeyPressed(KEY_RIGHT))
+	{
+		if (cell.j == 8)
+		{
+			cell.j = 0;
+		}
+		else cell.j++;
+	}
+	else if (IsKeyPressed(KEY_LEFT))
+	{
+		if (cell.j == 0)
+		{
+			cell.j = 8;
+		}
+		cell.j--;
+	}
+}
+
 void mainBackground()
 {
 	const int screenWidth = 720;
@@ -171,6 +213,10 @@ void mainBackground()
 	SetTargetFPS(60);
 	InitWindow(screenWidth, screenHeight, "Sudoku Solver");
 	Texture2D background = LoadTexture("Textures\\main_background.png"); // Store image file to Texture2D datatype
+
+	Cell selectedCell;
+	selectedCell.i = -1;
+	selectedCell.j = -1;
 
 	bool needExit = false;
 
@@ -186,6 +232,13 @@ void mainBackground()
 		DrawTextEx(font, to_string(steps).c_str(), { 214.3, 39.5 }, 42, 2, { 0, 49, 176, 255 });
 
 		displayMatrix();
+
+		// input cell's value from keyboard
+		if (numberStatus == 0 && selectedCell.i != -1 && selectedCell.j != -1)
+		{
+			inputOrMoveCellFromKeyBoard(selectedCell);
+		}
+		
 		for (int i = 0; i < 9; i++)
 		{
 			for (int j = 0; j < 9; j++)
@@ -194,8 +247,43 @@ void mainBackground()
 				if (CheckCollisionPointRec(GetMousePosition(), curRec))
 				{
 					DrawRectangleRec(curRec, Fade(DARKGREEN, 0.2f));
+					if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+					{
+						if (numberStatus == 0)
+						{
+							if (i == selectedCell.i && j == selectedCell.j)
+							{
+								selectedCell.i = -1;
+								selectedCell.j = -1;
+							}
+							else
+							{
+								selectedCell.i = i;
+								selectedCell.j = j;
+								cout << "selected cell: " << selectedCell.i << "," << selectedCell.j << endl;
+							}
+						}
+						else if (numberStatus == 10)
+						{
+							steps = 0;
+							eraseCellValue(sudoku, i, j);
+						}
+						else
+						{
+							addNumberToMatrix(sudoku, i, j, numberStatus, true);
+						}
+					}
 				}
 			}
+		}
+
+		if (numberStatus != 0)
+		{
+			DrawRectangleRec(numberRectangle[numberStatus - 1], Fade(ORANGE, 0.3f));
+		}
+		else if (selectedCell.i != -1 && selectedCell.j != -1)
+		{
+			DrawRectangleRec(cellRectangle[selectedCell.i][selectedCell.j], Fade(ORANGE, 0.2f));
 		}
 
 		for (int i = 0; i < 10; i++)
@@ -203,6 +291,22 @@ void mainBackground()
 			if (CheckCollisionPointRec(GetMousePosition(), numberRectangle[i]))
 			{
 				DrawRectangleRec(numberRectangle[i], Fade(DARKGREEN, 0.2f));
+				if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+				{
+					if (i == numberStatus - 1)
+					{
+						numberStatus = 0;
+					}
+					else
+					{
+						numberStatus = i + 1;
+						if (numberStatus != 0)
+						{
+							selectedCell.i = -1;
+							selectedCell.j = -1;
+						}
+					}
+				}
 			}
 		}
 
@@ -211,6 +315,20 @@ void mainBackground()
 			if (CheckCollisionPointRec(GetMousePosition(), optionRectangle[i]))
 			{
 				DrawRectangleRec(optionRectangle[i], Fade(DARKGREEN, 0.2f));
+				if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+				{
+					switch (i)
+					{
+					case 0:
+						steps = 0;
+						resetMatrix();
+						break;
+					case 1:
+						break;
+					case 2:
+						break;
+					}
+				}
 			}
 		}
 
@@ -222,7 +340,6 @@ void mainBackground()
 				if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
 				{
 					thread t_solve(solve2, ref(sudoku));
-					//solve2(sudoku);
 					t_solve.detach();
 				}
 			}

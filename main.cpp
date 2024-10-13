@@ -16,6 +16,8 @@ Font font;
 
 int main()
 {
+	ios_base::sync_with_stdio(false);
+	cout.tie(0);
 	/*hideCursor();
 	Sudoku sudoku = readFile("input2.csv");
 	printMatrix(sudoku);
@@ -29,7 +31,7 @@ int main()
 	}
 	else cout << "Can not be solved." << endl;
 	return 0;*/
-	sudoku = readFile("empty.csv");
+	sudoku = readFile("book.csv");
 	setupVariables();
 	mainBackground();
 	return 0;
